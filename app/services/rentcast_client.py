@@ -22,28 +22,25 @@ class RentCastClient(BaseAPIClient):
         min_price: Optional[int] = None,
         max_price: Optional[int] = None
     ) -> List[Listing]:
-        """Fetch for-sale listings from RentCast"""
-        logger.info(f"Fetching RentCast listings for zipcode {zipcode}")
+        """
+        Fetch property records from RentCast.
+        Note: RentCast free tier provides property database records, not active MLS listings.
+        Use RapidAPI or Homesage for real-time MLS data.
+        """
+        logger.info(f"Fetching RentCast property data for zipcode {zipcode}")
 
         try:
             headers = {"X-Api-Key": self.api_key}
 
-            # RentCast uses different endpoint for for-sale properties
+            # RentCast properties endpoint
             params = {
                 "zipCode": zipcode,
-                "status": "Active",
-                "propertyType": self._map_property_types(property_types),
                 "limit": 50  # Max per request
             }
 
-            if min_price:
-                params["priceMin"] = min_price
-            if max_price:
-                params["priceMax"] = max_price
-
             response = self._make_request(
                 method="GET",
-                url=f"{self.BASE_URL}/listings/sale",
+                url=f"{self.BASE_URL}/properties",
                 headers=headers,
                 params=params
             )
@@ -70,51 +67,38 @@ class RentCastClient(BaseAPIClient):
 
         return ','.join(rentcast_types) if rentcast_types else 'Single Family,Multi Family'
 
-    def _parse_response(self, response: dict, zipcode: str) -> List[Listing]:
-        """Parse RentCast API response into Listing objects"""
+    def _parse_response(self, response, zipcode: str) -> List[Listing]:
+        """
+        Parse RentCast API response into Listing objects.
+        Note: RentCast returns property records, not active listings.
+        These don't include prices, so we skip them for our use case.
+        """
         listings = []
 
-        for item in response.get('properties', []):
+        # Response is a list directly, not nested
+        items = response if isinstance(response, list) else response.get('properties', [])
+
+        for item in items:
             try:
                 # Extract address
-                address_obj = item.get('address', {})
-                address = address_obj.get('formattedAddress', '')
-
+                address = item.get('formattedAddress', '')
                 if not address:
                     continue
 
-                listing = Listing(
-                    listing_id=item.get('id') or self._generate_listing_id(address, zipcode),
-                    address=address,
-                    city=address_obj.get('city'),
-                    state=address_obj.get('state', 'CA'),
-                    zipcode=zipcode,
-                    price=int(item.get('price', 0)),
-                    bedrooms=item.get('bedrooms'),
-                    bathrooms=item.get('bathrooms'),
-                    sqft=item.get('squareFootage'),
-                    lot_size_sqft=item.get('lotSize'),
-                    year_built=item.get('yearBuilt'),
-                    property_type=self._normalize_property_type(
-                        item.get('propertyType', 'Unknown')
-                    ),
-                    status='active',
-                    listing_url=item.get('listingUrl'),
-                    photo_url=self._get_first_photo(item),
-                    mls_number=item.get('mlsNumber'),
-                    source_api=self.get_api_name(),
-                    description=item.get('description'),
-                    hoa_fee=item.get('hoaFee'),
-                    parking_spaces=item.get('parking', {}).get('spaces')
-                )
-
-                listings.append(listing)
-
-            except Exception as e:
-                logger.error(f"Error parsing RentCast listing: {e}")
+                # RentCast property database doesn't include listing prices
+                # Skip since we need prices for our monitoring
+                # This API is better suited for property details enrichment
+                logger.debug(f"Skipping RentCast property {address} (no listing price)")
                 continue
 
-        logger.info(f"Parsed {len(listings)} listings from RentCast for {zipcode}")
+            except Exception as e:
+                logger.error(f"Error parsing RentCast property: {e}")
+                continue
+
+        logger.info(
+            f"RentCast returned {len(items)} property records for {zipcode}, "
+            f"but none are active listings with prices"
+        )
         return listings
 
     def _get_first_photo(self, item: dict) -> Optional[str]:
