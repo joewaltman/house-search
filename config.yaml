@@ -1,0 +1,31 @@
+zipcodes:
+  priority:
+    - '92037'  # La Jolla
+    - '92109'  # Pacific Beach
+    - '92107'  # Ocean Beach
+    - '92118'  # Coronado
+    - '92075'  # Solana Beach
+    - '92014'  # Del Mar
+    - '92024'  # Encinitas
+    - '92007'  # Cardiff-by-the-Sea
+
+  additional:
+    - '92106'  # Point Loma
+    - '92110'  # Bay Park
+    - '92154'  # Imperial Beach
+    - '92155'  # Imperial Beach South
+    - '92008'  # Carlsbad
+    - '92009'  # Carlsbad
+    - '92011'  # Carlsbad
+    - '92054'  # Oceanside
+    - '92056'  # Oceanside
+    - '92091'  # Rancho Santa Fe
+
+property_types:
+  - single_family
+  - multi_family
+
+filters:
+  min_price: 400000
+  max_price: 5000000
+  min_lot_size_sqft: 8000  # Filter for lots >= 8000 sqft
