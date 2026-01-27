@@ -1,0 +1,17 @@
+{
+  "rentcast": {
+    "used": 1,
+    "limit": 50,
+    "reset_date": "2026-01-01T21:33:05.783225"
+  },
+  "rapidapi": {
+    "used": 20,
+    "limit": 100,
+    "reset_date": "2026-01-01T21:33:05.783225"
+  },
+  "homesage": {
+    "used": 20,
+    "limit": 500,
+    "reset_date": "2026-01-01T21:33:05.783225"
+  }
+}
