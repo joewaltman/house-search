@@ -172,10 +172,13 @@ class Aggregator:
     ) -> Listing:
         """
         Merge data from two listings, preferring non-null values.
-        Updates last_updated timestamp.
+        Updates last_updated timestamp and key fields like price and status.
         """
         # Start with existing data
         merged_data = existing.model_dump()
+
+        # Fields that should always be updated if new value is not None
+        always_update_fields = ['price', 'status', 'last_updated']
 
         # Update with new non-null values
         new_data = new.model_dump()
@@ -184,7 +187,8 @@ class Aggregator:
                 # Never update these fields
                 continue
 
-            if value is not None and (merged_data.get(key) is None or key == 'last_updated'):
+            # Update if: new value is not None AND (existing is None OR field should always update)
+            if value is not None and (merged_data.get(key) is None or key in always_update_fields):
                 merged_data[key] = value
 
         return Listing(**merged_data)
