@@ -24,3 +24,4 @@ filters:
   min_price: 400000
   max_price: 5000000
   min_lot_size_sqft: 8000  # Filter for lots >= 8000 sqft
+  max_longitude: -117.20  # Keep properties west of this longitude (closer to ocean)

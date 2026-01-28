@@ -15,6 +15,10 @@ class Listing(BaseModel):
     state: Optional[str] = "CA"
     zipcode: str
 
+    # Location coordinates (for proximity filtering)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
     # Pricing
     price: int
 

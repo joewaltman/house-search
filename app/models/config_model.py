@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -13,6 +13,7 @@ class FiltersConfig(BaseModel):
     min_price: int = 400000
     max_price: int = 5000000
     min_lot_size_sqft: int = 8000
+    max_longitude: Optional[float] = None  # Filter for ocean proximity
 
 
 class AppConfig(BaseModel):

@@ -23,7 +23,8 @@ class ListingFilter:
         Filters:
         1. Price range (min/max)
         2. Lot size (>= min_lot_size_sqft)
-        3. Property type (single_family, multi_family)
+        3. Ocean proximity (longitude threshold)
+        4. Property type (single_family, multi_family)
 
         Returns:
             Filtered list of listings
@@ -35,6 +36,7 @@ class ListingFilter:
         # Apply each filter
         filtered = self._filter_by_price(filtered)
         filtered = self._filter_by_lot_size(filtered)
+        filtered = self._filter_by_ocean_proximity(filtered)
         filtered = self._filter_by_property_type(filtered, property_types)
 
         logger.info(
@@ -104,6 +106,48 @@ class ListingFilter:
 
         return filtered
 
+    def _filter_by_ocean_proximity(self, listings: List[Listing]) -> List[Listing]:
+        """
+        Filter by ocean proximity using longitude threshold.
+
+        Properties WEST of max_longitude (more negative) are closer to ocean.
+        Strategy: Exclude properties without coordinate data OR east of threshold.
+        """
+        # Skip filtering if max_longitude not configured
+        if self.config.max_longitude is None:
+            logger.info("Ocean proximity filter: SKIPPED (max_longitude not configured)")
+            return listings
+
+        filtered = []
+        no_data_count = 0
+
+        for listing in listings:
+            if listing.longitude is None:
+                # No coordinate data - exclude
+                logger.debug(
+                    f"Excluded {listing.address}: no longitude data"
+                )
+                no_data_count += 1
+                continue
+
+            # Keep properties WEST of threshold (longitude <= max_longitude)
+            # More negative = further west = closer to ocean
+            if listing.longitude <= self.config.max_longitude:
+                filtered.append(listing)
+            else:
+                logger.debug(
+                    f"Excluded {listing.address}: longitude {listing.longitude} "
+                    f"too far east (threshold: {self.config.max_longitude})"
+                )
+
+        logger.info(
+            f"Ocean proximity filter (<= {self.config.max_longitude} lon): "
+            f"{len(listings)} -> {len(filtered)} "
+            f"({no_data_count} excluded for missing coordinates)"
+        )
+
+        return filtered
+
     def _filter_by_property_type(
         self,
         listings: List[Listing],
@@ -129,7 +173,10 @@ class ListingFilter:
 
     def get_filter_summary(self) -> str:
         """Get human-readable summary of filter criteria"""
-        return (
+        summary = (
             f"Price: ${self.config.min_price:,} - ${self.config.max_price:,}, "
             f"Lot Size: >= {self.config.min_lot_size_sqft:,} sqft"
         )
+        if self.config.max_longitude is not None:
+            summary += f", Ocean Proximity: lon <= {self.config.max_longitude}"
+        return summary

@@ -81,6 +81,11 @@ class RapidAPIClient(BaseAPIClient):
                 state = address_obj.get('state_code', 'CA')
                 postal_code = address_obj.get('postal_code', zipcode)
 
+                # Extract coordinates for ocean proximity filtering
+                coordinate = address_obj.get('coordinate', {})
+                latitude = coordinate.get('lat')
+                longitude = coordinate.get('lon')
+
                 # Get price
                 list_price = item.get('list_price')
                 if not list_price:
@@ -136,6 +141,8 @@ class RapidAPIClient(BaseAPIClient):
                     city=city,
                     state=state,
                     zipcode=postal_code,
+                    latitude=latitude,
+                    longitude=longitude,
                     price=int(list_price),
                     bedrooms=beds,
                     bathrooms=baths,
