@@ -380,3 +380,4 @@ MIT License - use freely for personal or commercial purposes.
 ---
 
 Built with ❤️ for finding the perfect San Diego coastal property
+# Railway Deployment Wed Jan 28 09:20:32 PST 2026
